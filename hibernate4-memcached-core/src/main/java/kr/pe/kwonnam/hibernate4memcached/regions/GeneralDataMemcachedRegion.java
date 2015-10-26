@@ -4,6 +4,7 @@ import kr.pe.kwonnam.hibernate4memcached.memcached.CacheNamespace;
 import kr.pe.kwonnam.hibernate4memcached.memcached.MemcachedAdapter;
 import kr.pe.kwonnam.hibernate4memcached.timestamper.HibernateCacheTimestamper;
 import kr.pe.kwonnam.hibernate4memcached.util.OverridableReadOnlyProperties;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.GeneralDataRegion;
@@ -110,6 +111,6 @@ public class GeneralDataMemcachedRegion extends MemcachedRegion implements Gener
      * Memcached has limitation of key size. Shorten the key to avoid the limitation if needed.
      */
     protected String refineKey(Object key) {
-        return String.valueOf(key);
+        return DigestUtils.md5Hex(String.valueOf(key)) + "_" + String.valueOf(key.hashCode());
     }
 }
