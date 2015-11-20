@@ -7,10 +7,14 @@ import kr.pe.kwonnam.hibernate4memcached.util.OverridableReadOnlyProperties;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.GeneralDataRegion;
+import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cfg.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Field;
 
 import static kr.pe.kwonnam.hibernate4memcached.Hibernate4MemcachedRegionFactory.REGION_EXPIRY_SECONDS_PROPERTY_KEY_PREFIX;
 
@@ -111,6 +115,30 @@ public class GeneralDataMemcachedRegion extends MemcachedRegion implements Gener
      * Memcached has limitation of key size. Shorten the key to avoid the limitation if needed.
      */
     protected String refineKey(Object key) {
-        return DigestUtils.md5Hex(String.valueOf(key)) + "_" + String.valueOf(key.hashCode());
+        String tenantId;
+
+        if (key instanceof CacheKey) {
+            tenantId = ((CacheKey) key).getTenantId();
+        } else if (key instanceof QueryKey) {
+            tenantId = extractTenant((QueryKey) key);
+        } else {
+            tenantId = "";
+        }
+
+        return DigestUtils.sha1Hex(String.valueOf(key)) + "_" + tenantId + "_" + String.valueOf(key.hashCode());
+    }
+
+    private String extractTenant(QueryKey queryKey) {
+        try {
+            Field f = QueryKey.class.getDeclaredField("tenantIdentifier");
+            f.setAccessible(true);
+            return (String) f.get(queryKey);
+        } catch (NoSuchFieldException e) {
+            log.warn("Cannot retrieve tenantIdentifier from QueryKey", e);
+        } catch (IllegalAccessException e) {
+            log.warn("Cannot retrieve tenantIdentifier from QueryKey", e);
+        }
+
+        return "";
     }
 }
