@@ -46,6 +46,6 @@ public class QueryResultsMemcachedRegionTest {
         String key = "select something from Entity where many many conditions are satisfied.";
         String refinedKey = queryResultsMemcachedRegion.refineKey(key);
 
-        assertThat(refinedKey).isEqualTo(DigestUtils.md5Hex(key) + "_" + String.valueOf(key.hashCode()));
+        assertThat(refinedKey).isEqualTo(DigestUtils.sha1Hex(key) + "__" + String.valueOf(key.hashCode()));
     }
 }
