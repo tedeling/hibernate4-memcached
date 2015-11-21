@@ -1,5 +1,5 @@
 ext {
-    spyMemcachedVersion = '2.11.2'
+    spyMemcachedVersion = '2.12.0'
 }
 
 dependencies {
